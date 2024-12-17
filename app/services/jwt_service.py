@@ -3,7 +3,9 @@ from builtins import dict, str
 import jwt
 from datetime import datetime, timedelta
 from settings.config import settings
+import logging
 
+logger = logging.getLogger(__name__)
 def create_access_token(*, data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     # Convert role to uppercase before encoding the JWT
@@ -17,6 +19,8 @@ def create_access_token(*, data: dict, expires_delta: timedelta = None):
 def decode_token(token: str):
     try:
         decoded = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        logger.info(f"Decoded Token: {decoded}")
         return decoded
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        logger.error(f"Token decode error: {e}")
         return None

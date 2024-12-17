@@ -190,3 +190,22 @@ async def test_list_users_unauthorized(async_client, user_token):
         headers={"Authorization": f"Bearer {user_token}"}
     )
     assert response.status_code == 403  # Forbidden, as expected for regular user
+
+@pytest.mark.asyncio
+async def test_root_endpoint(async_client: AsyncClient):
+    response = await async_client.get("/")
+    assert response.status_code == 404  # Expect 404 as no root endpoint is defined
+    assert response.json()["detail"] == "Not Found"  # FastAPI default response for 404 errors
+
+
+@pytest.mark.asyncio
+async def test_list_users_no_auth(async_client):
+    response = await async_client.get("/users/")  # No Authorization header
+    assert response.status_code == 401  # Unauthorized
+    assert response.json()["detail"] == "Not authenticated"
+
+@pytest.mark.asyncio
+async def test_protected_endpoint_unauthorized(async_client):
+    response = await async_client.get("/users/")
+    assert response.status_code == 401  # Unauthorized access
+    assert response.json()["detail"] == "Not authenticated"
