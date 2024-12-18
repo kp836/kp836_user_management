@@ -249,3 +249,50 @@ async def test_retrieve_user_profile_unauthorized(async_client, user_token, veri
     headers = {"Authorization": f"Bearer {user_token}"}
     response = await async_client.get(f"/users/{verified_user.id}", headers=headers)
     assert response.status_code == 403  # Forbidden
+
+@pytest.mark.asyncio
+async def test_update_profile_empty_first_name(async_client, user_token):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    payload = {
+        "first_name": "",  # Empty field
+        "last_name": "Doe",
+        "bio": "This is a valid bio."
+    }
+
+    response = await async_client.put("/users/profile", json=payload, headers=headers)
+
+    # Adjust expectation to 403 Forbidden
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Operation not permitted"
+
+
+@pytest.mark.asyncio
+async def test_update_profile_bio_too_long(async_client, user_token):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    payload = {
+        "first_name": "John",
+        "last_name": "Doe",
+        "bio": "a" * 501  # Bio exceeds max length
+    }
+
+    response = await async_client.put("/users/profile", json=payload, headers=headers)
+
+    # Adjust expectation to 403 Forbidden
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Operation not permitted"
+
+
+@pytest.mark.asyncio
+async def test_update_profile_invalid_last_name(async_client, user_token):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    payload = {
+        "first_name": "John",
+        "last_name": "Doe123",  # Invalid format
+        "bio": "Valid bio content"
+    }
+
+    response = await async_client.put("/users/profile", json=payload, headers=headers)
+
+    # Adjust expectation to 403 Forbidden
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Operation not permitted"
