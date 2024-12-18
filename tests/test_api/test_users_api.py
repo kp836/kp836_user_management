@@ -296,3 +296,16 @@ async def test_update_profile_invalid_last_name(async_client, user_token):
     # Adjust expectation to 403 Forbidden
     assert response.status_code == 403
     assert response.json()["detail"] == "Operation not permitted"
+
+@pytest.mark.asyncio
+async def test_admin_can_view_all_users(async_client, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    
+    response = await async_client.get("/users/", headers=headers)
+    
+    # Assertions
+    assert response.status_code == 200  
+    data = response.json()
+    assert "items" in data  
+    assert isinstance(data["items"], list)  
+    assert len(data["items"]) > 0  
