@@ -209,3 +209,43 @@ async def test_protected_endpoint_unauthorized(async_client):
     response = await async_client.get("/users/")
     assert response.status_code == 401  # Unauthorized access
     assert response.json()["detail"] == "Not authenticated"
+
+@pytest.mark.asyncio
+async def test_retrieve_user_profile_fields(async_client, verified_user, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = await async_client.get(f"/users/{verified_user.id}", headers=headers)
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert "first_name" in data
+    assert "last_name" in data
+    assert "bio" in data
+
+@pytest.mark.asyncio
+async def test_user_profile_field_values(async_client, verified_user, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = await async_client.get(f"/users/{verified_user.id}", headers=headers)
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["first_name"] == verified_user.first_name
+    assert data["last_name"] == verified_user.last_name
+    assert data["bio"] == verified_user.bio
+
+@pytest.mark.asyncio
+async def test_admin_retrieves_own_profile(async_client, admin_user, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = await async_client.get(f"/users/{admin_user.id}", headers=headers)
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == str(admin_user.id)
+    assert "first_name" in data
+    assert "last_name" in data
+    assert "bio" in data
+
+@pytest.mark.asyncio
+async def test_retrieve_user_profile_unauthorized(async_client, user_token, verified_user):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    response = await async_client.get(f"/users/{verified_user.id}", headers=headers)
+    assert response.status_code == 403  # Forbidden
